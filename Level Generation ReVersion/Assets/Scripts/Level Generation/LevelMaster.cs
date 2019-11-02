@@ -21,8 +21,10 @@ public class LevelMaster : MonoBehaviour {
 	public GameObject solBlock;				//Solid blocks
 	public GameObject player;				//The player
 	public GameObject exit;					//The goal
-	public GameObject Walls;				//The wall's root
-	public GameObject Level;				//The level's root
+	public GameObject walls;				//The wall's root
+    public GameObject backgroundWalls;      //Empty space/background walls
+    public GameObject litBackgroundWalls;   //Lit empty space/background walls
+	public GameObject level;				//The level's root
 	public int emptyRandoms;				//Number of empty tiles in random rooms
 
 	//General variables
@@ -51,12 +53,31 @@ public class LevelMaster : MonoBehaviour {
 	private bool firstRun = true;			//First run?
 
 	//Position flag temps
-	bool posSet = false;
-	bool ePosSet = false;
+	private bool posSet = false;
+	private bool ePosSet = false;
 
-	
-	//Triggers when the script is loaded 
-	void Start () {
+    private class LayoutRoom {
+        public int index;
+        public int type;
+        public void SetIndex(int index) {
+            this.index = index;
+        }
+
+        public int GetIndex() {
+            return index;
+        }
+
+        public void SetType(int type) {
+            this.type = type;
+        }
+
+        public int GetType() {
+            return type;
+        }
+    }
+
+    //Triggers when the script is loaded 
+    void Start () {
 		roomCounter = 0;
 		solutionPath = new List<int> ();
 		position = new Vector3 (); 
@@ -64,13 +85,25 @@ public class LevelMaster : MonoBehaviour {
 		GenerateLevel (roomLayout);
 		//GenerateRoo	m (1);
 	}
-
+    
+    //Updates once per frame
 	void Update () {
         EndLevel();
 	}
-	
-	//Generates rooms - taking on	e parameter, representing the type of the room. 
-	private void GenerateRoom (int rType) {
+
+    private void EndLevel()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape)) {
+            Application.LoadLevel(0);
+        }
+
+        if (player.GetComponent<Collider2D>().IsTouching(exit.GetComponent<Collider2D>())) {
+            Application.LoadLevel(0);
+        }
+    }
+
+    //Generates rooms - taking on	e parameter, representing the type of the room. 
+    private void GenerateRoom (int rType) {
 
 		//Determines the room's position
 		//short rTemp = solutionPath [roomCounter];
@@ -114,74 +147,117 @@ public class LevelMaster : MonoBehaviour {
 				}
 			}
 		}
-
-		for (int i = 0; i < temp.Length; i++) {
+        int tempX = 0;
+        for (int i = 0; i < temp.Length; i++) {
 			GameObject tempTile;
 			switch (temp[i]) {
-				//An empty space
+				//Background
 				case 0: 
-					if (tileCounter >= 10) {
-						tileCounter = 0;
-						tileDepth++;
-					}
+                    if(tileCounter < 10) {
+                        if(tempX < 10) {
+                            tempTile = Instantiate(backgroundWalls, new Vector3(position.x + tileCounter, position.y - tileDepth, 0), Quaternion.identity) as GameObject;
+                            tempTile.transform.parent = level.transform;
+                            tempX++;
+                        } else {
+                            tempTile = Instantiate(litBackgroundWalls, new Vector3(position.x + tileCounter, position.y - tileDepth, 0), Quaternion.identity) as GameObject;
+                            tempTile.transform.parent = level.transform;
+                            tempX = 0;
+                        }                     
+                    } else if (tileCounter >= 10) {
+                        tileCounter = 0;
+                        tileDepth++;
+                        if(tempX < 10) {
+                            tempTile = Instantiate(backgroundWalls, new Vector3(position.x + tileCounter, position.y - tileDepth, 0), Quaternion.identity) as GameObject;
+                            tempTile.transform.parent = level.transform;
+                            tempX++;
+                        } else {
+                            tempTile = Instantiate(litBackgroundWalls, new Vector3(position.x + tileCounter, position.y - tileDepth, 0), Quaternion.identity) as GameObject;
+                            tempTile.transform.parent = level.transform;
+                            tempX = 0;
+                        }
+                    }
 					break; 
 				//A solid block - simple as that
 				case 1:
 					if (tileCounter < 10) {
 						tempTile = Instantiate(solBlock, new Vector3(position.x + tileCounter, position.y - tileDepth, 0),Quaternion.identity) as GameObject;
-						tempTile.transform.parent = Level.transform;
+						tempTile.transform.parent = level.transform;
 					} else if (tileCounter >= 10) {
 						tileCounter = 0; 
 						tileDepth++;
 						tempTile = Instantiate(solBlock, new Vector3(position.x + tileCounter, position.y - tileDepth, 0),Quaternion.identity) as GameObject;
-						tempTile.transform.parent = Level.transform;
+						tempTile.transform.parent = level.transform;
 					}
 					break;
 				//May be solid block or empty space 
 				case 2:
 					int temp2 = Random.Range (0,2);
-					if(temp2 == 0) {
-						if (tileCounter >= 10) {
-							tileCounter = 0;
-							tileDepth++;
-						}
-					} else if(temp2 == 1) {
-						if (tileCounter < 10) {
-							tempTile = Instantiate(solBlock, new Vector3(position.x + tileCounter, position.y - tileDepth, 0),Quaternion.identity) as GameObject;
-							tempTile.transform.parent = Level.transform;	
-						} else if (tileCounter >= 10) {
-							tileCounter = 0; 
-							tileDepth++;
-							tempTile = Instantiate(solBlock, new Vector3(position.x + tileCounter, position.y - tileDepth, 0),Quaternion.identity) as GameObject;
-							tempTile.transform.parent = Level.transform;
-						}
-					}
+                    if (temp2 == 0) {
+                        if (tileCounter < 10) {
+                            if (tempX < 10) {
+                                tempTile = Instantiate(backgroundWalls, new Vector3(position.x + tileCounter, position.y - tileDepth, 0), Quaternion.identity) as GameObject;
+                                tempTile.transform.parent = level.transform;
+                                tempX++;
+                            } else {
+                                tempTile = Instantiate(litBackgroundWalls, new Vector3(position.x + tileCounter, position.y - tileDepth, 0), Quaternion.identity) as GameObject;
+                                tempTile.transform.parent = level.transform;
+                                tempX = 0;
+                            }
+                        } else if (tileCounter >= 10) {
+                            tileCounter = 0;
+                            tileDepth++;
+                            if (tempX < 10) {
+                                tempTile = Instantiate(backgroundWalls, new Vector3(position.x + tileCounter, position.y - tileDepth, 0), Quaternion.identity) as GameObject;
+                                tempTile.transform.parent = level.transform;
+                                tempX++;
+                            } else {
+                                tempTile = Instantiate(litBackgroundWalls, new Vector3(position.x + tileCounter, position.y - tileDepth, 0), Quaternion.identity) as GameObject;
+                                tempTile.transform.parent = level.transform;
+                                tempX = 0;
+                            }
+                        }
+                    } else if (temp2 == 1) {
+                        if (tileCounter < 10) {
+                            tempTile = Instantiate(solBlock, new Vector3(position.x + tileCounter, position.y - tileDepth, 0), Quaternion.identity) as GameObject;
+                            tempTile.transform.parent = level.transform;
+                        } else if (tileCounter >= 10) {
+                            tileCounter = 0;
+                            tileDepth++;
+                            tempTile = Instantiate(solBlock, new Vector3(position.x + tileCounter, position.y - tileDepth, 0), Quaternion.identity) as GameObject;
+                            tempTile.transform.parent = level.transform;
+                        }
+                    }
 					break;
 				case 3:
 					if (tileCounter < 10) {
-					player.transform.position = new Vector3(position.x + tileCounter, position.y - tileDepth, 0);
-					print (player.transform.position);
+					    player.transform.position = new Vector3(position.x + tileCounter, position.y - tileDepth, -10);
+                        tempTile = Instantiate(backgroundWalls, new Vector3(position.x + tileCounter, position.y - tileDepth, 0), Quaternion.identity) as GameObject;
+                        tempTile.transform.parent = level.transform;
 					} else if (tileCounter >= 10) {
 						tileCounter = 0; 
 						tileDepth++;
-						print (position);
-						player.transform.position = new Vector3(position.x + tileCounter, position.y - tileDepth, 0);
+                        tempTile = Instantiate(backgroundWalls, new Vector3(position.x + tileCounter, position.y - tileDepth, 0), Quaternion.identity) as GameObject;
+                        tempTile.transform.parent = level.transform;
+                        player.transform.position = new Vector3(position.x + tileCounter, position.y - tileDepth, -10);
 						print (player.transform.position);
 					}
-					break;
-			case 4:
-				if (tileCounter < 10) {
-					exit.transform.position = new Vector3(position.x + tileCounter, position.y - tileDepth, 0);
-				} else if (tileCounter >= 10) {
-					tileCounter = 0; 
-					tileDepth++;
-					exit.transform.position = new Vector3(position.x + tileCounter, position.y - tileDepth, 0);
-				}
-				break;
+				    break;
+			    case 4:
+				    if (tileCounter < 10) {
+					    exit.transform.position = new Vector3(position.x + tileCounter, position.y - tileDepth, -10);
+                        tempTile = Instantiate(backgroundWalls, new Vector3(position.x + tileCounter, position.y - tileDepth, 0), Quaternion.identity) as GameObject;
+                        tempTile.transform.parent = level.transform;
+                    } else if (tileCounter >= 10) {
+					    tileCounter = 0; 
+					    tileDepth++;
+					    exit.transform.position = new Vector3(position.x + tileCounter, position.y - tileDepth, -10);
+                        tempTile = Instantiate(backgroundWalls, new Vector3(position.x + tileCounter, position.y - tileDepth, 0), Quaternion.identity) as GameObject;
+                        tempTile.transform.parent = level.transform;
+                    }
+		            break;
 				//Generate obstacles in the room
-				case 5:
-
-					break; 
+		        case 5:
+		            break; 
 			}
 			tileCounter++;
 		}
@@ -208,25 +284,25 @@ public class LevelMaster : MonoBehaviour {
 
 			for (int i = 0; i < 45 - optCounter1; i++) {
 				GameObject tempTile = Instantiate(solBlock, new Vector3(tempPos.x + counter1, tempPos.y, 0), Quaternion.identity) as GameObject;
-                tempTile.transform.parent = Walls.transform;
+                tempTile.transform.parent = walls.transform;
 				counter1++;
 			}
 
 			for (int n = 0; n < 38 - optCounter2; n++) {
 				GameObject tempTile = Instantiate(solBlock, new Vector3(tempPos.x, tempPos.y - counter2, 0), Quaternion.identity) as GameObject;
-                tempTile.transform.parent = Walls.transform;
+                tempTile.transform.parent = walls.transform;
 				counter2++;
 			}
 
 			for (int m = 0; m < 43; m++) {
 				GameObject tempTile = Instantiate(solBlock, new Vector3(tempPos2.x + counter3, tempPos2.y, 0), Quaternion.identity) as GameObject;
-				tempTile.transform.parent = Walls.transform;
+				tempTile.transform.parent = walls.transform;
 				counter3++;
 			}
 
 			for (int b = 0; b < 32; b++) {
 				GameObject tempTile = Instantiate(solBlock, new Vector3(tempPos3.x, tempPos3.y - counter4, 0), Quaternion.identity) as GameObject;
-                tempTile.transform.parent = Walls.transform;
+                tempTile.transform.parent = walls.transform;
 				counter4++;
 			}
 
@@ -594,14 +670,7 @@ public class LevelMaster : MonoBehaviour {
 			
 		}
 	}
-	
-    private void EndLevel()
-    {
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            Application.LoadLevel(0);
-        }
-    }
+
 
     private int[] layoutSelector (int rType) {
         string layout1;
@@ -612,9 +681,9 @@ public class LevelMaster : MonoBehaviour {
 		string temp2;
 		int rand;
 
-
-
 		switch (rType) {
+            /*This is a different procedural generation method for type 0 rooms (i.e. Not on the main solution path).
+            it is very much still a work in progress.*/
 			case 0:
 				int[] layo0 = new int[80];
 				int strLoc = Random.Range (35, 45);
@@ -876,27 +945,4 @@ public class LevelMaster : MonoBehaviour {
 				return null;
 		}
 	}
-
-	private class LayoutRoom {
-		public int index;
-	 	public int type;
-
-		public void SetIndex(int index) {
-			this.index = index;
-		}
-
-		public int GetIndex() {
-			return index;
-		}
-
-		public void SetType(int type) {
-			this.type = type;
-		}
-
-		public int GetType() {
-			return type;
-		}
-
-	}
-
 }
