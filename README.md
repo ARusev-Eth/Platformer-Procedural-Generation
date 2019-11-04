@@ -18,7 +18,7 @@ Using the application:
        
        Left and right use the arrow keys, jump with the up arrow key (double jumping is enabled).
  
-   2b. The scene controls are as follows (only applicable on the generated level i.e. post Play button scene):
+   2b. The scene controls (only applicable on the generated level i.e. post Play button scene):
       
        Escape: Returns to the landing scene.
       
