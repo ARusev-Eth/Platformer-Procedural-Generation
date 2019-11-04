@@ -17,6 +17,9 @@ Using the application:
    2a. The player controls use the arrow keys, with up being a jump. Double jumping is enabled.
  
    2b. The scene controls are as follows (only applicable on the generated level i.e. post Play button scene):
-      Escape: Returns to the landing scene.
-      Return(Enter): Generate a new level.
-      Space: Swaps between a player view camera and an overview camera.
+      
+       Escape: Returns to the landing scene.
+      
+       Return(Enter): Generate a new level.
+      
+       Space: Swaps between a player view camera and an overview camera.
