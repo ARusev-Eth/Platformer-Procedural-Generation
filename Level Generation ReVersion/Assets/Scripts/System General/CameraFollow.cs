@@ -16,8 +16,12 @@ public class CameraFollow : MonoBehaviour {
 		this.transform.position = new Vector3 (player.transform.position.x, player.transform.position.y, transform.position.z);
 	}
 
-	// Same as Update, always called after update
-	void Update() {
+    private void Start() {
+        CamSet();
+    }
+
+    // Same as Update, always called after update
+    private void Update() {
 		Follow ();
 	}
 

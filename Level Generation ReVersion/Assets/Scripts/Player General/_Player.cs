@@ -62,7 +62,8 @@ public class _Player : MonoBehaviour {
 
 		hpBar.transform.localPosition = new Vector2 (GetBarX (curHP, 0, maxHP, minXHPValue, maxXHPValue), casheYHP);
 		mpBar.transform.localPosition = new Vector2 (GetBarX (curMP, 0, maxMP, minXMPValue, maxXMPValue), casheYMP);
-	
+	    
+
 		SetFight ();
 		DecayMP ();
 		RegenHP ();

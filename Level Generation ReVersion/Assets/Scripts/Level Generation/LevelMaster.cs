@@ -19,13 +19,14 @@ public class LevelMaster : MonoBehaviour {
 
 	//Assets/Blocks/Prefabs used for generation
 	public GameObject solBlock;				//Solid blocks
-	public GameObject player;				//The player
-	public GameObject exit;					//The goal
+	public GameObject player;				
+	public GameObject exit;					
 	public GameObject walls;				//The wall's root
-    public GameObject backgroundWalls;      //Empty space/background walls
-    public GameObject litBackgroundWalls;   //Lit empty space/background walls
+    public GameObject backgroundWalls;      
+    public GameObject litBackgroundWalls;   
 	public GameObject level;				//The level's root
-	public int emptyRandoms;				//Number of empty tiles in random rooms
+    public Camera mainCamera;               
+    public Camera subCamera;                
 
 	//General variables
 	private List<int> roomLayout;			//Contains numbers representing the type of each room
@@ -33,24 +34,26 @@ public class LevelMaster : MonoBehaviour {
 	private List<int> solutionPath;			//Contains the solution path - i.e. the room guaranteed to lead to the exit point
 	private int[] solPath;					//An array used to convert the solutionPath ArrayList to an array
 	private short numRooms;					//How many rooms have been generated so far
+    private Camera curActiveCam;            //Currently active camera
+    public int emptyRandoms;                //Experimental generation of non-main path rooms
 
-	//Room generation varaibles
-	private Vector3 position;				//The starting position of each room's generation
+    //Room generation varaibles
+    private Vector3 position;				//The starting position of each room's generation
 	private int[] tileLayout;				//Layout of the tiles in a room
 	private int tileCounter; 				//Used for "navigation"
 	private int roomCounter;				//Used for even more "navigation"
-	private int tileDepth; 					//MORE "navigation"
-	private int entryPt;					//Starting point
-	private int exitPt;						//Goal point
+	private int tileDepth; 					//"navigation"
+	private int entryPt;					
+	private int exitPt;						
 
 	//Path generation varaibles
 	private	int iniDirectionRNG;			//Initial direction 
 	private int solDepth;					//Depth counter for solution path
 	private int curRoom;					//Current location of solution generator
 	private int donRoom;					//Generation room counter
-	private int goalRoom;					//Where the goal will be generated
-	private int startRoom;					//Where the starting point will be generated
-	private bool firstRun = true;			//First run?
+	private int goalRoom;					
+	private int startRoom;					
+	private bool firstRun = true;			
 
 	//Position flag temps
 	private bool posSet = false;
@@ -79,22 +82,45 @@ public class LevelMaster : MonoBehaviour {
     //Triggers when the script is loaded 
     void Start () {
 		roomCounter = 0;
+        emptyRandoms = StaticDataHolder.randomBlocks;
 		solutionPath = new List<int> ();
 		position = new Vector3 (); 
 		GeneratePath ();
 		GenerateLevel (roomLayout);
-		//GenerateRoo	m (1);
-	}
+        mainCamera.enabled = false;
+        curActiveCam = subCamera;
+        subCamera.orthographicSize = 76 * Screen.height / Screen.width * 0.5f;
+    }
     
     //Updates once per frame
 	void Update () {
+        if (Input.GetKeyDown(KeyCode.Space)) {
+            CameraSwap();
+        }
         EndLevel();
 	}
+
+    private void CameraSwap() {
+        if (mainCamera.isActiveAndEnabled) {
+            curActiveCam = subCamera;
+            mainCamera.enabled = false;
+            subCamera.enabled = true;  
+        } else if (subCamera.isActiveAndEnabled) {
+            curActiveCam = mainCamera;
+            mainCamera.transform.position = new Vector3(player.transform.position.x, player.transform.position.y, mainCamera.transform.position.z);
+            mainCamera.enabled = true;
+            subCamera.enabled = false;
+        }
+    }
 
     private void EndLevel()
     {
         if (Input.GetKeyDown(KeyCode.Escape)) {
             Application.LoadLevel(0);
+        }
+
+        if (Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Return)) {
+            Application.LoadLevel(1);
         }
 
         if (player.GetComponent<Collider2D>().IsTouching(exit.GetComponent<Collider2D>())) {
@@ -230,27 +256,26 @@ public class LevelMaster : MonoBehaviour {
 					break;
 				case 3:
 					if (tileCounter < 10) {
-					    player.transform.position = new Vector3(position.x + tileCounter, position.y - tileDepth, -10);
+					    player.transform.position = new Vector3(position.x + tileCounter, position.y - tileDepth, -1);
                         tempTile = Instantiate(backgroundWalls, new Vector3(position.x + tileCounter, position.y - tileDepth, 0), Quaternion.identity) as GameObject;
                         tempTile.transform.parent = level.transform;
-					} else if (tileCounter >= 10) {
+                    } else if (tileCounter >= 10) {
 						tileCounter = 0; 
 						tileDepth++;
                         tempTile = Instantiate(backgroundWalls, new Vector3(position.x + tileCounter, position.y - tileDepth, 0), Quaternion.identity) as GameObject;
                         tempTile.transform.parent = level.transform;
-                        player.transform.position = new Vector3(position.x + tileCounter, position.y - tileDepth, -10);
-						print (player.transform.position);
-					}
+                        player.transform.position = new Vector3(position.x + tileCounter, position.y - tileDepth, -1);
+                    }
 				    break;
 			    case 4:
 				    if (tileCounter < 10) {
-					    exit.transform.position = new Vector3(position.x + tileCounter, position.y - tileDepth, -10);
+					    exit.transform.position = new Vector3(position.x + tileCounter, position.y - tileDepth, -1);
                         tempTile = Instantiate(backgroundWalls, new Vector3(position.x + tileCounter, position.y - tileDepth, 0), Quaternion.identity) as GameObject;
                         tempTile.transform.parent = level.transform;
                     } else if (tileCounter >= 10) {
 					    tileCounter = 0; 
 					    tileDepth++;
-					    exit.transform.position = new Vector3(position.x + tileCounter, position.y - tileDepth, -10);
+					    exit.transform.position = new Vector3(position.x + tileCounter, position.y - tileDepth, -1);
                         tempTile = Instantiate(backgroundWalls, new Vector3(position.x + tileCounter, position.y - tileDepth, 0), Quaternion.identity) as GameObject;
                         tempTile.transform.parent = level.transform;
                     }
