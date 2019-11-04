@@ -14,7 +14,9 @@ Using the application:
 
 2. Controls:
   
-   2a. The player controls use the arrow keys, with up being a jump. Double jumping is enabled.
+   2a. The player controls:
+       
+       Left and right use the arrow keys, jump with the up arrow key (double jumping is enabled).
  
    2b. The scene controls are as follows (only applicable on the generated level i.e. post Play button scene):
       
