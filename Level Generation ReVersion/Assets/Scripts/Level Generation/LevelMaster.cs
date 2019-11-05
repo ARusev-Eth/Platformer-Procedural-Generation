@@ -4,15 +4,13 @@ using System.Collections;
 using System.Collections.Generic;
 
 /*
- * 	This script is the word of Antonio Rusev,
- * 	BSc (Hons) Computer Games Software Development
- * 	Glasgow Caledonian University - S1226502
+ * 	This script is writen by Antonio Rusev,
  *  
  *  Process flow is as follows:
  *	1. Generate solution path.
  *	2. Generate each room along the solution path.
- *	3. Generate "filler" rooms (not on solution path). 
- *	4. Generate obstacles and enemies. 
+ *	3. Generate "filler" rooms (not on solution path). - Experimental
+ *	4. Generate obstacles and enemies. - Stretch Goals
 */
 
 public class LevelMaster : MonoBehaviour {
@@ -41,7 +39,6 @@ public class LevelMaster : MonoBehaviour {
     private Vector3 position;				//The starting position of each room's generation
 	private int[] tileLayout;				//Layout of the tiles in a room
 	private int tileCounter; 				//Used for "navigation"
-	private int roomCounter;				//Used for even more "navigation"
 	private int tileDepth; 					//"navigation"
 	private int entryPt;					
 	private int exitPt;						
@@ -74,14 +71,13 @@ public class LevelMaster : MonoBehaviour {
             this.type = type;
         }
 
-        public int GetType() {
+        public int GetRType() {
             return type;
         }
     }
 
     //Triggers when the script is loaded 
     void Start () {
-		roomCounter = 0;
         emptyRandoms = StaticDataHolder.randomBlocks;
 		solutionPath = new List<int> ();
 		position = new Vector3 (); 
@@ -100,6 +96,14 @@ public class LevelMaster : MonoBehaviour {
         EndLevel();
 	}
 
+    //Generates the level in it's entirity 
+    private void GenerateLevel(List<int> sPath) {
+        GenerateBorder();
+        for (int i = 0; i < sPath.Count; i++) {
+            GenerateRoom(sPath[i]);
+        }
+    }
+
     private void CameraSwap() {
         if (mainCamera.isActiveAndEnabled) {
             curActiveCam = subCamera;
@@ -113,8 +117,7 @@ public class LevelMaster : MonoBehaviour {
         }
     }
 
-    private void EndLevel()
-    {
+    private void EndLevel() {
         if (Input.GetKeyDown(KeyCode.Escape)) {
             Application.LoadLevel(0);
         }
@@ -132,7 +135,6 @@ public class LevelMaster : MonoBehaviour {
     private void GenerateRoom (int rType) {
 
 		//Determines the room's position
-		//short rTemp = solutionPath [roomCounter];
 		int depthCounter = (donRoom - (donRoom % 4)) / 4; 
 		if (donRoom % 4 == 0) {
 			position = new Vector3 (0, depthCounter * -8, 0);
@@ -173,6 +175,7 @@ public class LevelMaster : MonoBehaviour {
 				}
 			}
 		}
+
         int tempX = 0;
         for (int i = 0; i < temp.Length; i++) {
 			GameObject tempTile;
@@ -302,8 +305,6 @@ public class LevelMaster : MonoBehaviour {
 		int counter4 = 0;
 		int optCounter1 = 0;
 		int optCounter2 = 0;
-		int optCounter3 = 0;
-		int optCounter4 = 0;
 
 		for (int q = 0; q < 3; q++) {
 
@@ -343,14 +344,6 @@ public class LevelMaster : MonoBehaviour {
 		}
 	}
 
-	//Generates the level in it's entirity 
-	private void GenerateLevel (List<int> sPath) {
-		GenerateBorder ();
-		for (int i = 0; i < sPath.Count; i++) {
-			GenerateRoom (sPath[i]);
-		}
-	}
-
 	//Generates the solution path 
 	private void GeneratePath () {
 		solutionPath = new List<int> ();
@@ -365,67 +358,6 @@ public class LevelMaster : MonoBehaviour {
 		GenerateLayout (solutionPath);
 	}
 
-	//---------------------PSEUDOCODE SECTION------------------------
-	/*
-	 * Compare i = 1 to a sorted solution path List i.e. :
-	 * 			--------Code snippet--------
-	 * 	for (int i = 1;i < 17;i++) {
-	 * 		if (i != sSolutionPath[counter]) {
-	 * 			roomLayout[i - 1].Add(0);
-	 * 		} ...
-	 * 	}
-	 * 
-	 * 	Note: i < 17, is due to the rooms always being 16 - look below for layout.
-	 * 
-	 * if i != solutionPath[counter*] - simply add a 0, suggesting a random room
-	 * 
-	 * if i == solutionPath[counter] :
-	 * 
-	 * Check what i's value is:
-	 *  a) is it 1, 13, 4, 16 (corner rooms)
-	 * 		- If yes, apply special conditions 
-	 * 			- 1-4 do not consider the position  -4 (can't go into negatives)
-	 * 			- 13-16 do not consider the position +4 (can't go beyond last room)
-	 * 
-	 * 		- If not, look at all relevant positions** which include:
-	 * 			- 4 (the room above)
-	 * 			+ 4 (the room below)
-	 * 
-	 *  b) based on whether rooms exist at considered positions add a number to the roomLayout<int> list
-	 * 		- if no room is found at position -4 or +4, generate a room of type 1 (populate list)
-	 * 		- if a room is found only at position +4, generate a room of type 2	(populate list)
-	 * 		- if a room is found only at position -4, generate a room of type 3 (populate list)
-	 * 		- if a room is found at both -4 and +4 (rare), generate a room of type 4 (populate list)
-	 * 
-	 * Test cases &ß results expectations:
-	 * 
-	 * solutionPath: 4, 3, 7, 6, 10, 14, 13
-	 * sSolutionPath: 3, 4, 6, 7, 10, 13, 14
-	 * roomLayout: 0, 0, 2, 1, 0, 2, 3, 0, 0, 4, 0, 0, 1, 3, 0, 0
-	 * 
-	 * solutionPath: 1, 2, 3, 4, 8, 7, 6, 5, 9, 10, 11, 12, 16, 15, 14, 13
-	 * sSolutionPath: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16
-	 * roomLayout: 1, 1, 1, 2, 2, 1, 1, 3, 3, 1, 1, 2, 1, 1, 1, 3
-	 * 
-	 * solutionPath: 4, 8, 12, 16
-	 * sSolutionPath: 4, 8, 12 ,16
-	 * roomLayout: 0, 0, 0, 2, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0, 3
-	 * 
-	 * Room Layout overview: 
-	 * 
-	 * 	1  2  3  4
-	 *  5  6  7  8
-	 *  9 10 11 12
-	 * 13 14 15 16
-	 * 
-	 * 
-	 * *Note: Counter used as a seprate position tracker, increments on each equivalent value.
-	 * **Note: We do not need to consider rooms adjecent on left and right due to all rooms being of type 1 by default.
-	 * 
-	 * Room types legend: 1 - left/right, 2 - left/right/down, 3 - left/right/up, 4 - left/right/up/down, 0 - random
-	*/
-	//----------------------------------------------------------------
-
 	//Generes the level's layout based on the solution path
 	private void GenerateLayout (List<int> path) {
 	
@@ -438,24 +370,9 @@ public class LevelMaster : MonoBehaviour {
 		List<int> tSolutionPath = new List<int> ();
 		List<LayoutRoom> indexList = new List<LayoutRoom> ();
 
-		bool firstRun = false;
+		firstRun = false;
 		int counter = 0;
-		/*
-		int fakeCounter = 0;
-
-		//First the list is populated with ints matching the room number
-		for (int i = 1; i < 17; i++) {
-			if (i == sSolutionPath[counter]) {
-				roomLayout.Add(i);
-				if (sSolutionPath.Count - 1 > counter) {
-					counter++;
-				}
-			} else {
-				roomLayout.Add(0);
-			}
-		}
-		*/
-			
+		
 		//Create a room type solution path equivalent
 		for (int i = 0; i < solutionPath.Count; i++) {
 			if (!firstRun) {
@@ -505,93 +422,11 @@ public class LevelMaster : MonoBehaviour {
 		for (int i = 1; i < roomLayout.Count + 1; i++) {
 			if (counter < indexList.Count) {
 				if (i == indexList[counter].GetIndex ()) {
-					roomLayout[i - 1] = indexList[counter].GetType();
+					roomLayout[i - 1] = indexList[counter].GetRType();
 					counter++;
 				}
 			}
 		}
-
-
-		/*
-		//Use the ints to determine the type of room to be generated
-		for (int i = 0; i < roomLayout.Count; i++) {
-			int above = roomLayout[i] - 4;
-			int below = roomLayout[i] + 4;
-			int ahead = fakeCounter + 1;
-			int behind = fakeCounter - 1;
-
-			if (solutionPath.Count > fakeCounter && roomLayout[i] != 0) { 
-				print("Current tile is: " + roomLayout[i] + " Current above is: " + above + " Current below is: " + below + " Current room is: " + solutionPath[fakeCounter]);
-			}
-
-
-			if (roomLayout[i] != 0) {
-				if (roomLayout[i] <= 4) {
-					if (roomLayout[i + 4] != 0) {
-						roomLayoutRtrn[i] = 2;
-					} else {
-						roomLayoutRtrn[i] = 1;
-					}
-				} else if (roomLayout[i] >= 13) {
-					if (roomLayout[i - 4] != 0) {
-						roomLayoutRtrn[i] = 3;
-					} else {
-						roomLayoutRtrn[i] = 1;
-					}
-				}
-				//Multi-path version
-				/* else {
-					if(roomLayout[i - 4] == 0 && roomLayout[i + 4] == 0) {
-						roomLayout[i] = 1;
-					} else if (roomLayout[i - 4] != 0 && roomLayout[i + 4] == 0) {
-						roomLayout[i] = 3;
-					} else if (roomLayout[i - 4] == 0 && roomLayout[i + 4] != 0) {
-						roomLayout[i] = 2;
-					} else if (roomLayout[i - 4] != 0 && roomLayout[i + 4] != 0) {
-						roomLayout[i] = 4;
-					}
-				} 
-
-				//My way or the highway
-				  else {
-					if (roomLayout[i - 4] == 0 && roomLayout[i + 4] == 0) {
-						roomLayoutRtrn[i] = 1;
-						print ("Both = 0");
-					} else if (roomLayout[i - 4] != 0 && roomLayout[i + 4] == 0) {
-						if (solutionPath[behind] == above) { 
-							print ("Compared: " + solutionPath[behind] + " and " + above + " and it was true");
-							roomLayoutRtrn[i] = 3;
-						} else {
-							print ("Compared: " + solutionPath[behind] + " and " + above + " and it was false");
-							roomLayoutRtrn[i] = 1;
-						}
-					} else if (roomLayout[i - 4] == 0 && roomLayout[i + 4] != 0) {
-						if (solutionPath[ahead] == below) {
-							print ("Compared: " + solutionPath[ahead] + " and " + below + " and it was true");
-							roomLayoutRtrn[i] = 2;
-						} else {
-							print ("Compared: " + solutionPath[ahead] + " and " + below + " and it was false");
-							roomLayoutRtrn[i] = 1;
-						}
-					} else if (roomLayout[i - 4] != 0 && roomLayout[i + 4] != 0) {
-						if (solutionPath[ahead] == below &&
-						    solutionPath[behind] == above) {
-							roomLayoutRtrn[i] = 4;
-						} else if (solutionPath[ahead] == below) {
-							roomLayoutRtrn[i] = 2;
-						} else if (solutionPath[behind] == above) {
-							roomLayoutRtrn[i] = 3;
-						} else {
-							roomLayoutRtrn[i] = 1;
-						}
-					}
-				} 
-				fakeCounter++;
-			} 
-			else {
-				roomLayoutRtrn[i] = 0;
-			}
-		}*/
 	}
 
 	//Picks a direction in which the solution path to head next
@@ -844,6 +679,8 @@ public class LevelMaster : MonoBehaviour {
 					}
 				}
 				return layo0;
+
+            //1 represents a solid grid space, 2 represents a randomised grid space and 0 represents an empty grid space
 			case 1: 
 				temp1 = 
 					"1;1;1;2;2;1;1;1;1;1;" +
