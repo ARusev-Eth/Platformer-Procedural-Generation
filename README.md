@@ -25,3 +25,9 @@ Using the application:
        Return(Enter): Generate a new level.
       
        Space: Swaps between a player view camera and an overview camera.
+
+   The script generating the levels is /Assets/Level Generation/LevelMaster.cs
+   
+   The player control script is: Assets/Scripts/Player General/PlayerMovement.cs
+   
+   The camera swap and GUI element script is: Assets/Scripts/Player General/_Player.cs
